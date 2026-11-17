@@ -112,7 +112,18 @@ export default function App() {
   useEffect(() => {
     setConnection('connecting');
     const unsubscribe = db.collection('bills').onSnapshot((snapshot) => {
-      const nextOrders = snapshot.docs.map((document) => {
+      // Only show bills that have an assigned queue. Bills with queue disabled
+      // (missing, null, false, or empty queue value) are intentionally excluded.
+      const nextOrders = snapshot.docs
+        .filter((document) => {
+          const bill = document.data();
+          return bill.queue !== null
+            && bill.queue !== undefined
+            && bill.queue !== false
+            && String(bill.queue).trim() !== ''
+            && String(bill.queue).trim() !== '-';
+        })
+        .map((document) => {
         const bill = document.data();
         const createdAt = bill.createdAt?.toMillis
           ? bill.createdAt.toMillis()
